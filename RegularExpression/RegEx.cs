@@ -88,7 +88,13 @@ namespace RegularExpression
 		/// <summary>
 		/// public default constructor
 		/// </summary>
-		public RegEx() { }
+		public RegEx(string pattern = null, StringBuilder status = null)
+		{
+			if (pattern != null && this.Compile(pattern, status) != ErrorCode.ERR_SUCCESS)
+			{
+				throw new CompilationException($"pattern <{pattern}> compilation failed");
+			}
+		}
 
 		/// <summary>
 		/// Compiles a pattern string produces a Minimum DFA model.
