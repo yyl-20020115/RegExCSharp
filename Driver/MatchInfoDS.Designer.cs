@@ -43,7 +43,7 @@ namespace Driver {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         protected MatchInfoDS(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
                 base(info, context, false) {
-            if ((this.IsBinarySerialized(info, context) == true)) {
+            if ((this.IsBinarySerialized(info, context))) {
                 this.InitVars(false);
                 global::System.ComponentModel.CollectionChangeEventHandler schemaChangedHandler1 = new global::System.ComponentModel.CollectionChangeEventHandler(this.SchemaChanged);
                 this.Tables.CollectionChanged += schemaChangedHandler1;
@@ -189,7 +189,7 @@ namespace Driver {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "4.0.0.0")]
         internal void InitVars(bool initTable) {
             this.tableMatchInfo = ((MatchInfoDataTable)(base.Tables["MatchInfo"]));
-            if ((initTable == true)) {
+            if ((initTable)) {
                 if ((this.tableMatchInfo != null)) {
                     this.tableMatchInfo.InitVars();
                 }

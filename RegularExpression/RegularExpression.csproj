@@ -62,12 +62,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ErrorCode.cs" />
     <Compile Include="FixConverter.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="Fsa.cs" />
+    <Compile Include="MetaSymbol.cs" />
     <Compile Include="NfaLink.cs" />
     <Compile Include="NfaToDfaHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ValidateException.cs" />
+    <Compile Include="ValidationInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -99,7 +103,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="NfaDiagram.txt" />
+    <Content Include="_NfaDiagram.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

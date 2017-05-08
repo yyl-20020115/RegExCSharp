@@ -68,7 +68,7 @@ namespace Driver
             this.btnCompile.TabIndex = 1;
             this.btnCompile.Text = "Compile";
             this.btnCompile.UseVisualStyleBackColor = true;
-            this.btnCompile.Click += new System.EventHandler(this.btnCompile_Click);
+            this.btnCompile.Click += new System.EventHandler(this.BtnCompile_Click);
             // 
             // txtRegEx
             // 
@@ -81,7 +81,7 @@ namespace Driver
             this.txtRegEx.Size = new System.Drawing.Size(667, 23);
             this.txtRegEx.TabIndex = 0;
             this.txtRegEx.Text = "a_*p";
-            this.txtRegEx.Enter += new System.EventHandler(this.txtRegEx_Enter);
+            this.txtRegEx.Enter += new System.EventHandler(this.TxtRegEx_Enter);
             // 
             // splitContainer1
             // 
@@ -181,7 +181,7 @@ namespace Driver
             this.btnFindFirst.TabIndex = 6;
             this.btnFindFirst.Text = "Find First";
             this.btnFindFirst.UseVisualStyleBackColor = true;
-            this.btnFindFirst.Click += new System.EventHandler(this.btnFindFirst_Click);
+            this.btnFindFirst.Click += new System.EventHandler(this.BtnFindFirst_Click);
             // 
             // chkGreedy
             // 
@@ -195,7 +195,7 @@ namespace Driver
             this.chkGreedy.TabIndex = 2;
             this.chkGreedy.Text = "Match longest substring possible (greedy)";
             this.chkGreedy.UseVisualStyleBackColor = true;
-            this.chkGreedy.CheckedChanged += new System.EventHandler(this.chkGreedy_CheckedChanged);
+            this.chkGreedy.CheckedChanged += new System.EventHandler(this.ChkGreedy_CheckedChanged);
             // 
             // btnFindNext
             // 
@@ -206,7 +206,7 @@ namespace Driver
             this.btnFindNext.TabIndex = 4;
             this.btnFindNext.Text = "Find Next";
             this.btnFindNext.UseVisualStyleBackColor = true;
-            this.btnFindNext.Click += new System.EventHandler(this.btnFindNext_Click);
+            this.btnFindNext.Click += new System.EventHandler(this.BtnFindNext_Click);
             // 
             // txtSearchString
             // 
@@ -222,9 +222,9 @@ namespace Driver
             this.txtSearchString.Size = new System.Drawing.Size(508, 240);
             this.txtSearchString.TabIndex = 2;
             this.txtSearchString.Text = "appleandpotato";
-            this.txtSearchString.Enter += new System.EventHandler(this.txtSearchString_Enter);
-            this.txtSearchString.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtSearchString_KeyDown);
-            this.txtSearchString.MouseDown += new System.Windows.Forms.MouseEventHandler(this.txtSearchString_MouseDown);
+            this.txtSearchString.Enter += new System.EventHandler(this.TxtSearchString_Enter);
+            this.txtSearchString.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TxtSearchString_KeyDown);
+            this.txtSearchString.MouseDown += new System.Windows.Forms.MouseEventHandler(this.TxtSearchString_MouseDown);
             // 
             // btnFindAll
             // 
@@ -235,7 +235,7 @@ namespace Driver
             this.btnFindAll.TabIndex = 5;
             this.btnFindAll.Text = "Find All";
             this.btnFindAll.UseVisualStyleBackColor = true;
-            this.btnFindAll.Click += new System.EventHandler(this.btnFindAll_Click);
+            this.btnFindAll.Click += new System.EventHandler(this.BtnFindAll_Click);
             // 
             // grdResult
             // 
@@ -260,7 +260,7 @@ namespace Driver
             this.grdResult.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.grdResult.Size = new System.Drawing.Size(514, 187);
             this.grdResult.TabIndex = 6;
-            this.grdResult.RowEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.grdResult_RowEnter);
+            this.grdResult.RowEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.GrdResult_RowEnter);
             // 
             // matchStringDataGridViewTextBoxColumn
             // 

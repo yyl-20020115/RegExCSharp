@@ -3,88 +3,40 @@ using System.Text;
 
 namespace RegularExpression
 {
-    public enum ErrorCode
+	/// <summary>
+	/// This class is used to validate a pattern.  Validation is done using Recursive Descent Parsing.
+	/// Beside validating the pattern, it does two other tasks: insertion of implicit tokens and expanding character classes.
+	/// i.e., "AB"    -> "A.B"        (inserting the concatenating quantifier)
+	///       "A.B"   -> "A\.B"       (inserting the escape)
+	///       "[A-C]" -> "(A|B|C)"    (expanding the range)
+	///       "(AB"   -> Reports error with mismatch parenthesis
+	/// </summary>
+	public class RegExValidator
     {
-        ERR_SUCCESS,        // the patten is in correct format
-        ERR_PREN_MISMATCH,  // "(A(D*)"
-        ERR_EMPTY_PREN,     // "()"
-        ERR_EMPTY_BRACKET,  // "[]"
-        ERR_BRACKET_MISMATCH,  // "["
-        ERR_OPERAND_MISSING,  // "A|"
-        ERR_INVALID_ESCAPE,   // "\A"
-        ERR_INVALID_RANGE,  // "[C-A]" 
-        ERR_EMPTY_STRING,   // ""
-    }
+        protected bool m_bConcatenate = false;
+		protected bool m_bAlternate = false;
 
-    public class ValidationInfo
-    {
-        public ErrorCode ErrorCode = ErrorCode.ERR_SUCCESS;
-        public int ErrorStartAt = -1;
-        public int ErrorLength = -1;
-        public string FormattedString = String.Empty;
-        public bool MatchAtStart = false;
-        public bool MatchAtEnd = false;
-    }
+		protected const char m_chNull = char.MinValue; // null symbol;
+		protected char m_chSym = m_chNull;
 
-    public class MetaSymbol
-    {
-        public const char CONCANATE = '.';
-        public const char ALTERNATE = '|';
-        public const char ZERO_OR_MORE = '*';
-        public const char ONE_OR_MORE = '+';
-        public const char ZERO_OR_ONE = '?';
-        public const char OPEN_PREN = '(';
-        public const char CLOSE_PREN = ')';
-        public const char COMPLEMENT = '^';
-        public const char ANY_ONE_CHAR = '_';  // this used in the syntax i.e., A_B => AEB or AcB
-        public const string ANY_ONE_CHAR_TRANS = "AnyChar";  // this is the actual transitional symbol
-        public const char ESCAPE = '\\';
-        public const string EPSILON = "epsilon";
-        public const char CHARHashSet_START = '[';
-        public const char CHARHashSet_END = ']';
-        public const char RANGE = '-';
-        public const string DUMMY = "Dummy";  // if you draw the model on paper, you should not draw this transition
-        public const char MATCH_START = '^';  // token to specify to match at the beginning of the string
-        public const char MATCH_END = '$';  // token to specify to match at the end of string
-        public const char NEW_LINE = '\n';
-        public const char TAB = '\t';
-    }
+		protected int m_nPatternLength = -1;
+		protected string m_sPattern = String.Empty;
+		protected int m_nCurrPos = -1;
+		protected StringBuilder m_sb = null;
 
-    /// <summary>
-    /// This class is used to validate a pattern.  Validation is done using Recursive Descent Parsing.
-    /// Beside validating the pattern, it does two other tasks: insertion of implicit tokens and expanding character classes.
-    /// i.e., "AB"    -> "A.B"        (inserting the concatenating quantifier)
-    ///       "A.B"   -> "A\.B"       (inserting the escape)
-    ///       "[A-C]" -> "(A|B|C)"    (expanding the range)
-    ///       "(AB"   -> Reports error with mismatch parenthesis
-    /// </summary>
-    public class RegExValidator
-    {
-
-        private bool m_bConcante = false;
-        private bool m_bAlternate = false;
-
-        private const char m_chNull = '\0'; // null symbol;
-        private char m_chSym = m_chNull;
-
-        private int m_nPatternLength = -1;
-        private string m_sPattern = String.Empty;
-        private int m_nCurrPos = -1;
-        private StringBuilder m_sb = null;
-
-        private ValidationInfo m_validationInfo = null;
+		protected ValidationInfo m_validationInfo = null;
 
         public RegExValidator()
         {
 
         }
 
-        public ValidationInfo Validate(string sPattern)
+        public virtual ValidationInfo Validate(string sPattern)
         {
             m_chSym = m_chNull;
-            m_bConcante = false;
+            m_bConcatenate = false;
             m_bAlternate = false;
-            m_sb = new StringBuilder(1024);
+            m_sb = new StringBuilder();
             m_nCurrPos = -1;
             m_sPattern = sPattern;
             m_nPatternLength = m_sPattern.Length;
@@ -133,21 +85,21 @@ namespace RegularExpression
                             Abort(ErrorCode.ERR_PREN_MISMATCH, m_nCurrPos, 1);
                             break;
                         default:
-                            Expression();
+                            ValidateExpression();
                             break;
                     }
                 }
             }
-            catch (Exception ex)
+            catch (ValidateException)
             {
-                Console.WriteLine(ex.Message);
+               
             }
 
             m_validationInfo.FormattedString = m_sb.ToString();
 
             return m_validationInfo;
         }
-        private void GetNextSymbol()
+        protected virtual void GetNextSymbol()
         {
             m_nCurrPos++;
             if (m_nCurrPos < m_nPatternLength)
@@ -159,7 +111,7 @@ namespace RegularExpression
                 m_chSym = m_chNull;
             }
         }
-        private bool Accept(char ch)
+		protected virtual bool Accept(char ch)
         {
             if (m_chSym == ch)
             {
@@ -168,7 +120,7 @@ namespace RegularExpression
             }
             return false;
         }
-        private bool AcceptPostfixOperator()
+		protected virtual bool AcceptPostfixOperator()
         {
             switch (m_chSym)
             {
@@ -181,7 +133,7 @@ namespace RegularExpression
                     return false;
             }
         }
-        private bool AcceptNonEscapeChar()
+		protected virtual bool AcceptNonEscapeChar()
         {
             switch (m_chSym)
             {
@@ -197,14 +149,14 @@ namespace RegularExpression
                 case m_chNull:
                     return false;
                 default:
-                    AppendConate();
+                    AppendConcatenate();
                     m_sb.Append(m_chSym);
                     Accept(m_chSym);
                     break;
             }
             return true;
         }
-        private bool Expect(char ch)
+		protected virtual bool Expect(char ch)
         {
             if (Accept(ch))
             {
@@ -212,7 +164,7 @@ namespace RegularExpression
             }
             return false;
         }
-        private bool ExpectEscapeChar()
+		protected virtual bool ExpectEscapeChar()
         {
             switch (m_chSym)
             {
@@ -243,23 +195,23 @@ namespace RegularExpression
             }
             return true;
         }
-        private void Abort(ErrorCode errCode, int nErrPosition, int nErrLen)
+		protected virtual void Abort(ErrorCode errCode, int nErrPosition, int nErrLen)
         {
             m_validationInfo.ErrorCode = errCode;
             m_validationInfo.ErrorStartAt = nErrPosition;
             m_validationInfo.ErrorLength = nErrLen;
 
-            throw new Exception("Syntax error.");
+            throw new ValidateException("Syntax error.");
         }
-        private void AppendConate()
+		protected virtual void AppendConcatenate()
         {
-            if (m_bConcante)
+            if (m_bConcatenate)
             {
                 m_sb.Append(MetaSymbol.CONCANATE);
-                m_bConcante = false;
+                m_bConcatenate = false;
             }
         }
-        private void AppendAlternate()
+		protected virtual void AppendAlternate()
         {
             if (m_bAlternate)
             {
@@ -267,50 +219,50 @@ namespace RegularExpression
                 m_bAlternate = false;
             }
         }
-        private void Expression()
+		protected virtual void ValidateExpression()
         {
             while (Accept(MetaSymbol.ESCAPE))
             {
-                AppendConate();
+                AppendConcatenate();
                 if (!ExpectEscapeChar())
                 {
                     Abort(ErrorCode.ERR_INVALID_ESCAPE, m_nCurrPos - 1, 1);
                 }
                 AcceptPostfixOperator();
-                m_bConcante = true;
+                m_bConcatenate = true;
             }
 
             while (Accept(MetaSymbol.CONCANATE))
             {
-                AppendConate();
+                AppendConcatenate();
                 m_sb.Append(MetaSymbol.ESCAPE);
                 m_sb.Append(MetaSymbol.CONCANATE);
                 AcceptPostfixOperator();
-                m_bConcante = true;
+                m_bConcatenate = true;
             }
 
             while (Accept(MetaSymbol.COMPLEMENT))
             {
-                AppendConate();
+                AppendConcatenate();
                 m_sb.Append(MetaSymbol.ESCAPE);
                 m_sb.Append(MetaSymbol.COMPLEMENT);
                 AcceptPostfixOperator();
-                m_bConcante = true;
+                m_bConcatenate = true;
             }
 
             while (AcceptNonEscapeChar())
             {
                 AcceptPostfixOperator();
-                m_bConcante = true;
-                Expression();
+                m_bConcatenate = true;
+                ValidateExpression();
             }
 
             if (Accept(MetaSymbol.OPEN_PREN))
             {
                 int nEntryPos = m_nCurrPos - 1;
-                AppendConate();
+                AppendConcatenate();
                 m_sb.Append(MetaSymbol.OPEN_PREN);
-                Expression();
+                ValidateExpression();
                 if (!Expect(MetaSymbol.CLOSE_PREN))
                 {
                     Abort(ErrorCode.ERR_PREN_MISMATCH, nEntryPos, m_nCurrPos - nEntryPos);
@@ -324,8 +276,8 @@ namespace RegularExpression
                 }
 
                 AcceptPostfixOperator();
-                m_bConcante = true;
-                Expression();
+                m_bConcatenate = true;
+                ValidateExpression();
             }
 
 
@@ -334,7 +286,7 @@ namespace RegularExpression
                 int nEntryPos = m_nCurrPos - 1;
                 bool bComplement = false;
 
-                AppendConate();
+                AppendConcatenate();
 
                 if (Accept(MetaSymbol.COMPLEMENT))
                 {
@@ -343,9 +295,9 @@ namespace RegularExpression
 
                 string sTmp = m_sb.ToString();
 
-                m_sb = new StringBuilder(1024);
+                m_sb = new StringBuilder();
                 m_bAlternate = false;
-                CharecterHashSet();
+                CharacterHashSet();
 
                 if (!Expect(MetaSymbol.CHARHashSet_END))
                 {
@@ -358,9 +310,9 @@ namespace RegularExpression
                 {
                     Abort(ErrorCode.ERR_EMPTY_BRACKET, nEntryPos, m_nCurrPos - nEntryPos);
                 }
-                else if (nLen == 3 && bComplement == true) // "[^]"  - treat the complement as literal
+                else if (nLen == 3 && bComplement) // "[^]"  - treat the complement as literal
                 {
-                    m_sb = new StringBuilder(1024);
+                    m_sb = new StringBuilder();
                     m_sb.Append(sTmp);
                     m_sb.Append(MetaSymbol.OPEN_PREN);
                     m_sb.Append(MetaSymbol.ESCAPE);
@@ -370,7 +322,7 @@ namespace RegularExpression
                 else
                 {
                     string sCharHashSet = m_sb.ToString();
-                    m_sb = new StringBuilder(1024);
+                    m_sb = new StringBuilder();
                     m_sb.Append(sTmp);
                     if (bComplement)
                     {
@@ -383,29 +335,27 @@ namespace RegularExpression
 
                 AcceptPostfixOperator();
 
-                m_bConcante = true;
+                m_bConcatenate = true;
 
-                Expression();
+                ValidateExpression();
             }
 
 
             if (Accept(MetaSymbol.ALTERNATE))
             {
                 int nEntryPos = m_nCurrPos - 1;
-                m_bConcante = false;
+                m_bConcatenate = false;
                 m_sb.Append(MetaSymbol.ALTERNATE);
-                Expression();
+                ValidateExpression();
                 int nLen = m_nCurrPos - nEntryPos;
                 if (nLen == 1)
                 {
                     Abort(ErrorCode.ERR_OPERAND_MISSING, nEntryPos, m_nCurrPos - nEntryPos);
                 }
-                Expression();
+                ValidateExpression();
             }
-
-
         }
-        private string ExpectEscapeCharInBracket()
+		protected virtual string ExpectEscapeCharInBracket()
         {
             char ch = m_chSym;
 
@@ -436,7 +386,7 @@ namespace RegularExpression
                     return String.Empty;
             }
         }
-        private string AcceptNonEscapeCharInBracket()
+		protected virtual string AcceptNonEscapeCharInBracket()
         {
             char ch = m_chSym;
 
@@ -462,7 +412,7 @@ namespace RegularExpression
                     return ch.ToString();
             }
         }
-        private void CharecterHashSet()
+		protected virtual void CharacterHashSet()
         {
             int nRangeFormStartAt = -1;
             int nStartAt = -1;
@@ -472,7 +422,6 @@ namespace RegularExpression
             string sLeft = String.Empty;
             string sRange = String.Empty;
             string sRight = String.Empty;
-
 
             string sTmp = String.Empty;
 
@@ -532,10 +481,9 @@ namespace RegularExpression
 
                 sRight = sTmp;
 
-
                 bool bOk = ExpandRange(sLeft, sRight);
 
-                if (bOk == false)
+                if (!bOk)
                 {
                     int nSubstringLen = (nStartAt + nLength) - nRangeFormStartAt;
 
@@ -554,7 +502,7 @@ namespace RegularExpression
             }
 
         }
-        private bool ExpandRange(string sLeft, string sRight)
+		protected virtual bool ExpandRange(string sLeft, string sRight)
         {
             char chLeft = (sLeft.Length > 1 ? sLeft[1] : sLeft[0]);
             char chRight = (sRight.Length > 1 ? sRight[1] : sRight[0]);

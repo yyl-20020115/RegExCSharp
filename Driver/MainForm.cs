@@ -17,7 +17,7 @@ namespace Driver
 			InitializeComponent();
 		}
 
-		private void btnCompile_Click(object sender, EventArgs e)
+		private void BtnCompile_Click(object sender, EventArgs e)
 		{
 			if (txtRegEx.Text.Length == 0)
 			{
@@ -51,17 +51,17 @@ namespace Driver
 			m_bFirstTime = true;
 		}
 
-		private void txtStat_KeyDown(object sender, KeyEventArgs e)
+		private void TxtStat_KeyDown(object sender, KeyEventArgs e)
 		{
 			m_bFirstTime = true;
 		}
 
-		private void txtStat_MouseDown(object sender, MouseEventArgs e)
+		private void TxtStat_MouseDown(object sender, MouseEventArgs e)
 		{
 			m_bFirstTime = true;
 		}
 
-		private void btnFindAll_Click(object sender, EventArgs e)
+		private void BtnFindAll_Click(object sender, EventArgs e)
 		{
 			if (!m_regEx.IsReady)
 			{
@@ -81,7 +81,8 @@ namespace Driver
 			do
 			{
 				bool bFound = m_regEx.FindMatch(txtSearchString.Text, nStartAt, txtSearchString.Text.Length - 1, ref nFoundStart, ref nFoundEnd);
-				if (bFound == true)
+
+				if (bFound)
 				{
 					string sSubstring = "{Empty String}";
 					nMatchLength = nFoundEnd - nFoundStart + 1;
@@ -100,7 +101,7 @@ namespace Driver
 			} while (nStartAt < txtSearchString.Text.Length);
 		}
 
-		private void btnFindNext_Click(object sender, EventArgs e)
+		private void BtnFindNext_Click(object sender, EventArgs e)
 		{
 			if (!m_regEx.IsReady)
 			{
@@ -142,7 +143,7 @@ namespace Driver
 			}
 		}
 
-		private void grdResult_RowEnter(object sender, DataGridViewCellEventArgs e)
+		private void GrdResult_RowEnter(object sender, DataGridViewCellEventArgs e)
 		{
 			try
 			{
@@ -158,36 +159,32 @@ namespace Driver
 			}
 		}
 
-		private void txtSearchString_KeyDown(object sender, KeyEventArgs e)
+		private void TxtSearchString_KeyDown(object sender, KeyEventArgs e)
 		{
 			m_bFirstTime = true;
 		}
 
-		private void txtSearchString_MouseDown(object sender, MouseEventArgs e)
+		private void TxtSearchString_MouseDown(object sender, MouseEventArgs e)
 		{
 			m_bFirstTime = true;
 		}
 
-
-		private void txtSearchString_Enter(object sender, EventArgs e)
+		private void TxtSearchString_Enter(object sender, EventArgs e)
 		{
 			this.AcceptButton = btnFindAll;
-
 		}
 
-		private void txtRegEx_Enter(object sender, EventArgs e)
+		private void TxtRegEx_Enter(object sender, EventArgs e)
 		{
 			this.AcceptButton = btnCompile;
-
 		}
 
-		private void chkGreedy_CheckedChanged(object sender, EventArgs e)
+		private void ChkGreedy_CheckedChanged(object sender, EventArgs e)
 		{
 			m_regEx.UseGreedy = chkGreedy.Checked;
-
 		}
 
-		private void btnFindFirst_Click(object sender, EventArgs e)
+		private void BtnFindFirst_Click(object sender, EventArgs e)
 		{
 			if (!m_regEx.IsReady)
 			{
@@ -199,6 +196,7 @@ namespace Driver
 			int nFoundEnd = -1;
 
 			bool bFound = m_regEx.FindMatch(txtSearchString.Text, 0, txtSearchString.Text.Length - 1, ref nFoundStart, ref nFoundEnd);
+
 			if (bFound)
 			{
 				int nMatchLength = nFoundEnd - nFoundStart + 1;

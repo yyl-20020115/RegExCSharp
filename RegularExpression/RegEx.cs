@@ -11,49 +11,84 @@ namespace RegularExpression
 		/// <summary>
 		/// Used to validate the pattern string and make sure it is in correct form
 		/// </summary>
-		static private RegExValidator m_reValidator = new RegExValidator();
+		protected static RegExValidator m_reValidator = new RegExValidator();
 
 		/// <summary>
 		/// Position of the last error in the pattern string.
 		/// 
 		/// </summary>
-		private int m_nLastErrorIndex = -1;
+		protected int m_nLastErrorIndex = -1;
 
 		/// <summary>
 		/// Length of the error substring in the pattern string
 		/// </summary>
-		private int m_nLastErrorLength = -1;
+		protected int m_nLastErrorLength = -1;
 
 		/// <summary>
 		/// ErrorCode indicating what if the last compilation succeeded.
 		/// </summary>
-		private ErrorCode m_LastErrorCode = ErrorCode.ERR_SUCCESS;
+		protected ErrorCode m_LastErrorCode = ErrorCode.ERR_SUCCESS;
 
 		/// <summary>
 		/// Specifies match must occur at the beginning of the input string (^)
 		/// </summary>
-		private bool m_bMatchAtStart = false;
+		protected bool m_bMatchAtStart = false;
 
 		/// <summary>
 		///  Specifies match must occur at the end of the input string ($)
 		/// </summary>
-		private bool m_bMatchAtEnd = false;
+		protected bool m_bMatchAtEnd = false;
 
 		/// <summary>
 		/// Behave greedy, default is true.
 		/// If true, Find will stop at the first accepting state, otherwise it will try process more character
 		/// </summary>
-		private bool m_bGreedy = true;
+		protected bool m_bGreedy = true;
 
 		/// <summary>
 		/// Start state of the DFA M'.
 		/// </summary>
-		private State m_stateStartDfaM = null;
+		protected State m_stateStartDfaM = null;
+
+
+		/// <summary>
+		/// Get the ready state of the parser.
+		/// </summary>
+		/// <returns>true if a Compile method had been called successfully, otherwise false.</returns>
+		public virtual bool IsReady => (this.m_stateStartDfaM != null);
+
+		/// <summary>
+		/// Position where error occurred during the last compilation
+		/// </summary>
+		/// <returns>-1 if there was no compilation</returns>
+		public virtual int LastErrorPosition => m_nLastErrorIndex;
+
+		/// <summary>
+		/// Indicate if the last compilation was successful or error
+		/// </summary>
+		/// <returns></returns>
+		public virtual ErrorCode LastErrorCode => m_LastErrorCode;
+
+		/// <summary>
+		/// Get last error length.
+		/// </summary>
+		/// <returns>Length</returns>
+		public virtual int LastErrorLength => m_nLastErrorLength;
+
+		/// <summary>
+		/// Gets/Sets to indicate whether Find should stop at the first accepting state, 
+		/// or should continue see if further match is possible (greedy).
+		/// </summary>
+		public virtual bool UseGreedy
+		{
+			get => m_bGreedy;
+			set => m_bGreedy = value;
+		}
 
 		/// <summary>
 		/// public default constructor
 		/// </summary>
-		public RegEx() {}
+		public RegEx() { }
 
 		/// <summary>
 		/// Compiles a pattern string produces a Minimum DFA model.
@@ -61,9 +96,11 @@ namespace RegularExpression
 		/// <param name="pattern">Actual pattern string in the correct format</param>
 		/// <param name="status">This will receive the statistics. Can be null.</param>
 		/// <returns>ErrorCode indicating how the compilation went.</returns>
-		public ErrorCode Compile(string pattern, StringBuilder status = null)
+		public virtual ErrorCode Compile(string pattern, StringBuilder status = null)
 		{
-			ValidationInfo vi = m_reValidator.Validate(pattern ?? throw new ArgumentNullException(nameof(pattern)));
+			if (pattern == null) throw new ArgumentNullException(nameof(pattern));
+
+			ValidationInfo vi = m_reValidator.Validate(pattern);
 
 			State.ResetId();
 
@@ -72,7 +109,9 @@ namespace RegularExpression
 			UpdateValidationInfo(vi);
 
 			if (vi.ErrorCode != ErrorCode.ERR_SUCCESS)
+			{
 				return vi.ErrorCode;
+			}
 
 			string sRegExPostfix = FixConverter.ConvertToPostfix(vi.FormattedString);
 
@@ -83,6 +122,7 @@ namespace RegularExpression
 				status.AppendLine("Pattern after postfix:\t\t" + sRegExPostfix);
 				status.AppendLine();
 			}
+
 			State stateStartNfa = Fsa.CreateNfa(sRegExPostfix);
 
 			if (status != null)
@@ -106,17 +146,17 @@ namespace RegularExpression
 				status.AppendLine();
 			}
 
-			State stateStartDfaM = Fsa.ReduceDfa(stateStartDfa);
-			m_stateStartDfaM = stateStartDfaM;
+			m_stateStartDfaM = Fsa.ReduceDfa(stateStartDfa);
 
 			if (status != null)
 			{
 				status.AppendLine();
 				status.AppendLine("Reduced DFA Table:");
-				nLineLength = Fsa.GetSerializedFsa(stateStartDfaM, status);
+				nLineLength = Fsa.GetSerializedFsa(m_stateStartDfaM, status);
 				status.AppendFormat((string.Empty).PadRight(nLineLength, '*'));
 				status.AppendLine();
 			}
+
 			return ErrorCode.ERR_SUCCESS;
 		}
 
@@ -130,14 +170,17 @@ namespace RegularExpression
 		/// <param name="nFoundBeginAt">If match found, receives the index where the match started, otherwise -1</param>
 		/// <param name="nFoundEndAt">If match found, receives the index where the match ended, otherwise -1</param>
 		/// <returns>true if match found, otherwise false.</returns>
-		public bool FindMatch(string sSearchIn,
+		public virtual bool FindMatch(string sSearchIn,
 							  int nSearchStartAt,
 							  int nSearchEndAt,
 							  ref int nFoundBeginAt,
 							  ref int nFoundEndAt)
 		{
+			if (sSearchIn == null) throw new ArgumentNullException(nameof(sSearchIn));
+			if (nSearchStartAt < 0 || nSearchEndAt >= sSearchIn.Length) throw new ArgumentOutOfRangeException(nameof(nSearchStartAt));
+			if (nSearchEndAt < 0 || nSearchEndAt >= sSearchIn.Length) throw new ArgumentOutOfRangeException(nameof(nSearchEndAt));
 
-			if (m_stateStartDfaM == null || nSearchStartAt < 0) return false;
+			if (m_stateStartDfaM == null) return false;
 
 			State stateStart = m_stateStartDfaM;
 
@@ -152,13 +195,13 @@ namespace RegularExpression
 
 			while (nIndex <= nSearchUpTo)
 			{
-				if (m_bGreedy && IsWildCard(stateCurr) == true)
+				if (m_bGreedy && IsWildCard(stateCurr))
 				{
 					if (nFoundBeginAt == -1)
 					{
 						nFoundBeginAt = nIndex;
 					}
-					
+
 					ProcessWildCard(stateCurr, sSearchIn, ref nIndex, nSearchUpTo);
 				}
 
@@ -186,8 +229,10 @@ namespace RegularExpression
 						{
 							bAccepted = true;
 							nFoundEndAt = nIndex;
-							if (m_bGreedy == false)
+							if (!m_bGreedy)
+							{
 								break;
+							}
 						}
 					}
 					stateCurr = toState;
@@ -230,8 +275,10 @@ namespace RegularExpression
 		/// </summary>
 		/// <param name="state">State to check</param>
 		/// <returns>true if the state contains wildcard transition, otherwise false</returns>
-		private bool IsWildCard(State state)
+		protected virtual bool IsWildCard(State state)
 		{
+			if (state == null) throw new ArgumentNullException(nameof(state));
+
 			return (state == state.GetSingleTransition(MetaSymbol.ANY_ONE_CHAR_TRANS));
 		}
 
@@ -242,8 +289,11 @@ namespace RegularExpression
 		/// <param name="sSearchIn">String to search in.</param>
 		/// <param name="nCurrIndex">Current index of the search</param>
 		/// <param name="nSearchUpTo">Index where to stop the search.</param>
-		private void ProcessWildCard(State state, string sSearchIn, ref int nCurrIndex, int nSearchUpTo)
+		protected virtual void ProcessWildCard(State state, string sSearchIn, ref int nCurrIndex, int nSearchUpTo)
 		{
+			if (state == null) throw new ArgumentNullException(nameof(state));
+			if (sSearchIn == null) throw new ArgumentNullException(nameof(sSearchIn));
+
 			State toState = null;
 
 			int nIndex = nCurrIndex;
@@ -262,45 +312,12 @@ namespace RegularExpression
 			}
 		}
 
-		/// <summary>
-		/// Get the ready state of the parser.
-		/// </summary>
-		/// <returns>true if a Compile method had been called successfully, otherwise false.</returns>
-		public bool IsReady => (this.m_stateStartDfaM != null);
-
-		/// <summary>
-		/// Position where error occurred during the last compilation
-		/// </summary>
-		/// <returns>-1 if there was no compilation</returns>
-		public int LastErrorPosition => m_nLastErrorIndex;
-
-		/// <summary>
-		/// Indicate if the last compilation was successful or error
-		/// </summary>
-		/// <returns></returns>
-		public ErrorCode LastErrorCode => m_LastErrorCode;
-
-		/// <summary>
-		/// Get last error length.
-		/// </summary>
-		/// <returns>Length</returns>
-		public int LastErrorLength => m_nLastErrorLength;
-
-		/// <summary>
-		/// Gets/Sets to indicate whether Find should stop at the first accepting state, 
-		/// or should continue see if further match is possible (greedy).
-		/// </summary>
-		public bool UseGreedy
-		{
-			get => m_bGreedy;
-			set => m_bGreedy = value;
-		}
 
 		/// <summary>
 		/// Helper function. Updates the local variables once the validation returns.
 		/// </summary>
 		/// <param name="vi"></param>
-		private void UpdateValidationInfo(ValidationInfo vi)
+		protected virtual void UpdateValidationInfo(ValidationInfo vi)
 		{
 			if (vi.ErrorCode == ErrorCode.ERR_SUCCESS)
 			{

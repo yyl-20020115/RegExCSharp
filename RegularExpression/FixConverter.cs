@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace RegularExpression
@@ -12,6 +13,8 @@ namespace RegularExpression
 		/// <returns>regular expression in postfix form</returns>
 		public static string ConvertToPostfix(string sInfixPattern)
 		{
+			if (sInfixPattern == null) throw new ArgumentNullException(nameof(sInfixPattern));
+
 			Stack<char> stackOperator = new Stack<char>();
 			Queue<char> queuePostfix = new Queue<char>();
 
@@ -21,14 +24,14 @@ namespace RegularExpression
 			{
 				char ch = sInfixPattern[i];
 
-				if (bEscape == false && ch == MetaSymbol.ESCAPE)
+				if (!bEscape && ch == MetaSymbol.ESCAPE)
 				{
 					queuePostfix.Enqueue(ch);
 					bEscape = true;
 					continue;
 				}
 
-				if (bEscape == true)
+				if (bEscape)
 				{
 					queuePostfix.Enqueue(ch);
 					bEscape = false;
@@ -41,7 +44,9 @@ namespace RegularExpression
 						break;
 					case MetaSymbol.CLOSE_PREN:
 						while (stackOperator.Peek() != MetaSymbol.OPEN_PREN)
+						{
 							queuePostfix.Enqueue(stackOperator.Pop());
+						}
 						stackOperator.Pop();  // pop the '('
 
 						break;
@@ -54,9 +59,13 @@ namespace RegularExpression
 							int nPriorityCurr = GetOperatorPriority(ch);
 
 							if (nPriorityPeek >= nPriorityCurr)
+							{
 								queuePostfix.Enqueue(stackOperator.Pop());
+							}
 							else
+							{
 								break;
+							}
 						}
 						stackOperator.Push(ch);
 						break;
@@ -69,13 +78,13 @@ namespace RegularExpression
 				queuePostfix.Enqueue(stackOperator.Pop());
 			}
 
-			StringBuilder sb = new StringBuilder();
+			StringBuilder builder = new StringBuilder();
 
 			while (queuePostfix.Count > 0)
 			{
-				sb.Append(queuePostfix.Dequeue());
+				builder.Append(queuePostfix.Dequeue());
 			}
-			return sb.ToString();
+			return builder.ToString();
 		}
 
 		/// <summary>

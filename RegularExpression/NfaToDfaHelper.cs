@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,7 +20,7 @@ namespace RegularExpression
         /// A nested class.
         /// A row with three fields. to store DFA states with two other attributes.
         /// </summary>
-        public class DfaStateRecord
+        protected class DfaStateRecord
         {
             /// <summary>
             /// HashSet of NFA state from which the DFA state was created
@@ -31,19 +32,21 @@ namespace RegularExpression
             /// </summary>
             public bool Marked = false;
         }
+		public virtual ICollection<State> AllDfaState => this.states.Keys;
 
-        public NfaToDfaHelper()
-        {
+		public NfaToDfaHelper() { }
 
-        }
         /// <summary>
         /// Simply adds newly created DFA state to the table
         /// </summary>
         /// <param name="stateDfa">the newly created DFA state</param>
         /// <param name="setE_Closure">HashSet of Enclosure that was used to create the DFA state</param>
-        public void AddDfaState(State stateDfa, HashSet<State> setE_Closure)
+        public virtual void AddDfaState(State stateDfa, HashSet<State> setE_Closure)
         {
-            this.states[stateDfa] = new DfaStateRecord()
+			if (stateDfa == null) throw new ArgumentNullException(nameof(stateDfa));
+			if (setE_Closure == null) throw new ArgumentNullException(nameof(setE_Closure));
+
+			this.states[stateDfa] = new DfaStateRecord()
             {
                 SetE_Closure = setE_Closure
             };
@@ -53,36 +56,30 @@ namespace RegularExpression
 		/// finds a DFA state using a HashSet of Enclosure state as search criteria.
 		/// because all DFAs are constructed from a HashSet of NFA state
 		/// </summary>
-		/// <param name="setE_closure">HashSet of Enclosure state as search criteria</param>
+		/// <param name="setE_Closure">HashSet of Enclosure state as search criteria</param>
 		/// <returns>if found, returns the DFA state record, or returns null</returns>
-		public State FindDfaStateByE_Closure(HashSet<State> setE_closure)
+		public virtual State FindDfaStateByE_Closure(HashSet<State> setE_Closure)
         {
-            return (from state in this.states where state.Value.SetE_Closure.SetEquals(setE_closure) select state.Key).FirstOrDefault();
+			if (setE_Closure == null) throw new ArgumentNullException(nameof(setE_Closure));
+
+			return (from state in this.states where state.Value.SetE_Closure.SetEquals(setE_Closure) select state.Key).FirstOrDefault();
         }  // end of FindDfaStateByEnclosure method
 
-        public HashSet<State> GetE_ClosureByDfaState(State state)
+        public virtual HashSet<State> GetE_ClosureByDfaState(State state)
         {
-            return this.states.TryGetValue(state, out var value) ? value?.SetE_Closure : null;
+			if (state == null) throw new ArgumentNullException(nameof(state));
+
+			return this.states.TryGetValue(state, out var value) ? value?.SetE_Closure : null;
         }
-        public State GetNextUnmarkedDfaState()
+        public virtual State GetNextUnmarkedDfaState()
         {
             return (from state in this.states where !state.Value.Marked select state.Key).FirstOrDefault();
         }
-        public void Mark(State state)
+        public virtual void Mark(State state)
         {
-            this.states[state].Marked = true ;
-        }
+			if (state == null) throw new ArgumentNullException(nameof(state));
 
-        /// <summary>
-        /// checks to see if a HashSet contains any state that is an accepting state.
-        /// used in NFA to DFA conversion
-        /// </summary>
-        /// <param name="HashSetState">HashSet of state</param>
-        /// <returns>true if HashSet contains at least one accepting state, else false</returns>
-
-        public ICollection<State> GetAllDfaState()
-        {
-            return this.states.Keys;
+			this.states[state].Marked = true ;
         }
-    }
+	}
 }

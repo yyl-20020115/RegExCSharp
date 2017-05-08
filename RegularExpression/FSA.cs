@@ -16,6 +16,8 @@ namespace RegularExpression
 		/// <returns>Formatted string</returns>
 		public static string SetToString(HashSet<State> set)
 		{
+			if (set == null) throw new ArgumentNullException(nameof(set));
+
 			return "{"
 				+ (set.Count == 0
 				? "Empty"
@@ -29,8 +31,9 @@ namespace RegularExpression
 		/// <returns>Start state of the NFA</returns>
 		public static State CreateNfa(string sRegExPosfix)
 		{
+			if (sRegExPosfix == null) throw new ArgumentNullException(nameof(sRegExPosfix));
+
 			Stack<NfaLink> stackNfa = new Stack<NfaLink>();
-			NfaLink expr = null;
 			NfaLink exprA = null;
 			NfaLink exprB = null;
 			NfaLink exprNew = null;
@@ -38,13 +41,13 @@ namespace RegularExpression
 
 			foreach (char ch in sRegExPosfix)
 			{
-				if (bEscape == false && ch == MetaSymbol.ESCAPE)
+				if (!bEscape && ch == MetaSymbol.ESCAPE)
 				{
 					bEscape = true;
 					continue;
 				}
 
-				if (bEscape == true)
+				if (bEscape)
 				{
 					exprNew = new NfaLink();
 
@@ -165,14 +168,22 @@ namespace RegularExpression
 				} // end of switch statement
 			}  // end of for..each loop
 
-			Debug.Assert(stackNfa.Count == 1);
-			expr = stackNfa.Pop();  // pop the very last one.  YES, THERE SHOULD ONLY BE ONE LEFT AT THIS POINT
-			expr.FinalState.AcceptingState = true;  // the very last state is the accepting state of the NFA
+			//Debug.Assert(stackNfa.Count == 1);
+			NfaLink result = stackNfa.Count >0 
+				? stackNfa.Pop()
+				: null;  // pop the very last one.  YES, THERE SHOULD ONLY BE ONE LEFT AT THIS POINT
 
-			return expr.StartState;  // return the start state of NFA
+			if (result != null)
+			{
+				result.FinalState.AcceptingState = true;  // the very last state is the accepting state of the NFA
 
+				return result.StartState;  // return the start state of NFA
+			}
+			else
+			{
+				return null;
+			}
 		}  // end of CreateNfa method
-
 
 		/// <summary>
 		/// Finds all state reachable from the specific state on Epsilon transition
@@ -181,6 +192,8 @@ namespace RegularExpression
 		/// <returns>A set of all state reachable from teh startState on Epsilon transition</returns>
 		public static HashSet<State> E_Closure(State stateStart)
 		{
+			if (stateStart == null) throw new ArgumentNullException(nameof(stateStart));
+
 			HashSet<State> setProcessed = new HashSet<State>();
 			HashSet<State> setUnprocessed = new HashSet<State>
 			{
@@ -212,6 +225,8 @@ namespace RegularExpression
 		/// <returns></returns>
 		public static HashSet<State> E_Closure(HashSet<State> setState)
 		{
+			if (setState == null) throw new ArgumentNullException(nameof(setState));
+
 			HashSet<State> setAllEnclosure = new HashSet<State>();
 
 			foreach (State state in setState)
@@ -229,6 +244,9 @@ namespace RegularExpression
 		/// <returns>Set of Move</returns>
 		public static HashSet<State> Move(HashSet<State> setState, string sInputSymbol)
 		{
+			if (setState == null) throw new ArgumentNullException(nameof(setState));
+			if (sInputSymbol == null) throw new ArgumentNullException(nameof(sInputSymbol));
+
 			HashSet<State> set = new HashSet<State>();
 
 			foreach (State state in setState)
@@ -246,6 +264,9 @@ namespace RegularExpression
 		/// <returns>Set of Move</returns>
 		public static HashSet<State> Move(State state, string sInputSymbol)
 		{
+			if (state == null) throw new ArgumentNullException(nameof(state));
+			if (sInputSymbol == null) throw new ArgumentNullException(nameof(sInputSymbol));
+
 			return state.GetTransitions(sInputSymbol);
 		}
 
@@ -257,6 +278,8 @@ namespace RegularExpression
 		/// <returns>Starting state of DFA</returns>
 		public static State ConvertToDfa(State stateStartNfa)
 		{
+			if (stateStartNfa == null) throw new ArgumentNullException(nameof(stateStartNfa));
+
 			HashSet<string> setAllInput = new HashSet<string>();
 			HashSet<State> setAllState = new HashSet<State>();
 
@@ -329,7 +352,6 @@ namespace RegularExpression
 
 		}  // end of ConvertToDfa method
 
-
 		/// <summary>
 		/// Converts DFA to Minimum DFA or DFA M'.
 		/// </summary>
@@ -339,6 +361,8 @@ namespace RegularExpression
 		/// <returns>Starting state of DFA M'</returns>
 		public static State ReduceDfa(State stateStartDfa)
 		{
+			if (stateStartDfa == null) throw new ArgumentNullException(nameof(stateStartDfa));
+
 			HashSet<string> setInputSymbol = new HashSet<string>();
 			HashSet<State> setAllDfaState = new HashSet<State>();
 
@@ -399,7 +423,7 @@ namespace RegularExpression
 			}  // end of outer foreach..loop
 
 			//  STEP 4: now remove all "dead states"
-			setAllDfaState.RemoveWhere(state => state.IsDeadState());
+			setAllDfaState.RemoveWhere(state => state.IsDeadState);
 
 			return stateStartReducedDfa;
 		}
@@ -413,6 +437,9 @@ namespace RegularExpression
 		/// <returns>Array of DFA groups</returns>
 		public static List<HashSet<State>> PartitionDfaGroups(HashSet<State> setMasterDfa, HashSet<string> setInputSymbol)
 		{
+			if (setMasterDfa == null) throw new ArgumentNullException(nameof(setMasterDfa));
+			if (setInputSymbol == null) throw new ArgumentNullException(nameof(setInputSymbol));
+
 			List<HashSet<State>> arrGroup = new List<HashSet<State>>();  // array of all set (group) of DFA states.
 			Map<HashSet<State>, State> map = new Map<HashSet<State>, State>();   // to keep track of which member transition into which group
 			HashSet<State> setEmpty = new HashSet<State>();
@@ -495,8 +522,6 @@ namespace RegularExpression
 					}
 					map.Clear();
 				}  // end of while..loop
-
-
 			}  // end of foreach (object objString in setInputSymbol)
 
 			return arrGroup;
@@ -510,6 +535,9 @@ namespace RegularExpression
 		/// <returns>Set the state belongs to</returns>
 		public static HashSet<State> FindGroup(List<HashSet<State>> arrGroup, State state)
 		{
+			if (arrGroup == null) throw new ArgumentNullException(nameof(arrGroup));
+			if (state == null) throw new ArgumentNullException(nameof(state));
+
 			return arrGroup.Where(set => set.Contains(state)).FirstOrDefault();
 		}
 
@@ -520,6 +548,7 @@ namespace RegularExpression
 		/// <returns>true if set contains any accepting states, otherwise false</returns>
 		public static bool IsAcceptingGroup(HashSet<State> setGroup)
 		{
+			if (setGroup == null) throw new ArgumentNullException(nameof(setGroup));
 			return setGroup.Any(s => s.AcceptingState);
 		}
 		/// <summary>
@@ -530,6 +559,9 @@ namespace RegularExpression
 		/// <param name="setAllState">when function returns, this set contains all the input symbols</param>
 		public static void GetAllStateAndInput(State stateStart, HashSet<State> setAllState, HashSet<string> setInputSymbols)
 		{
+			if (stateStart == null) throw new ArgumentNullException(nameof(stateStart));
+			if (setAllState == null) throw new ArgumentNullException(nameof(setAllState));
+			if (setInputSymbols == null) throw new ArgumentNullException(nameof(setInputSymbols));
 			HashSet<State> setUnprocessed = new HashSet<State>
 			{
 				stateStart
@@ -541,7 +573,7 @@ namespace RegularExpression
 				setAllState.Add(state);
 				setUnprocessed.Remove(state);
 
-				foreach (string sSymbol in state.GetAllKeys())
+				foreach (string sSymbol in state.AllKeys)
 				{
 					setInputSymbols.Add(sSymbol);
 
@@ -557,15 +589,22 @@ namespace RegularExpression
 			}  // end of outer while..loop      
 		}
 
-		public static int GetSerializedFsa(State stateStart, StringBuilder sb)
+		public static int GetSerializedFsa(State stateStart, StringBuilder builder)
 		{
+			if (stateStart == null) throw new ArgumentNullException(nameof(stateStart));
+			if (builder == null) throw new ArgumentNullException(nameof(builder));
+
 			HashSet<State> setAllState = new HashSet<State>();
 			HashSet<string> setAllInput = new HashSet<string>();
 			GetAllStateAndInput(stateStart, setAllState, setAllInput);
-			return GetSerializedFsa(stateStart, setAllState, setAllInput, sb);
+			return GetSerializedFsa(stateStart, setAllState, setAllInput, builder);
 		}
-		public static int GetSerializedFsa(State stateStart, HashSet<State> setAllState, HashSet<string> setAllSymbols, StringBuilder sb)
+		public static int GetSerializedFsa(State stateStart, HashSet<State> setAllState, HashSet<string> setAllSymbols, StringBuilder builder)
 		{
+			if (stateStart == null) throw new ArgumentNullException(nameof(stateStart));
+			if (setAllState == null) throw new ArgumentNullException(nameof(setAllState));
+			if (setAllSymbols == null) throw new ArgumentNullException(nameof(setAllSymbols));
+			if (builder == null) throw new ArgumentNullException(nameof(builder));
 			int nLineLength = 0;
 			int nMinWidth = 6;
 			string sLine = String.Empty;
@@ -588,9 +627,9 @@ namespace RegularExpression
 			}
 			sLine = String.Format(sFormat, arrObj);
 			nLineLength = Math.Max(nLineLength, sLine.Length);
-			sb.AppendLine((string.Empty).PadRight(nLineLength, '-'));
-			sb.AppendLine(sLine);
-			sb.AppendLine((string.Empty).PadRight(nLineLength, '-'));
+			builder.AppendLine((string.Empty).PadRight(nLineLength, '-'));
+			builder.AppendLine(sLine);
+			builder.AppendLine((string.Empty).PadRight(nLineLength, '-'));
 
 			// construct the rows for transition
 			int nTransCount = 0;
@@ -619,15 +658,15 @@ namespace RegularExpression
 				}
 
 				sLine = String.Format(sFormat, arrObj);
-				sb.AppendLine(sLine);
+				builder.AppendLine(sLine);
 				nLineLength = Math.Max(nLineLength, sLine.Length);
 			}
 
 			sFormat = "State Count: {0}, Input Symbol Count: {1}, Transition Count: {2}";
 			sLine = String.Format(sFormat, setAllState.Count, setAllSymbols.Count, nTransCount);
 			nLineLength = Math.Max(nLineLength, sLine.Length);
-			sb.AppendLine((string.Empty).PadRight(nLineLength, '-'));
-			sb.AppendLine(sLine);
+			builder.AppendLine((string.Empty).PadRight(nLineLength, '-'));
+			builder.AppendLine(sLine);
 			nLineLength = Math.Max(nLineLength, sLine.Length);
 			setAllSymbols.Remove(MetaSymbol.EPSILON);
 

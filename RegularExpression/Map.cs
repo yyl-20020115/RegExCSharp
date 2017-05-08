@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace RegularExpression
@@ -18,11 +19,19 @@ namespace RegularExpression
 	{
 		public virtual void Add(TKey key, T mapTo)
 		{
+			if (key == null) throw new ArgumentNullException(nameof(key));
+
 			if (!this.TryGetValue(key, out HashSet<T> set))
+			{
 				if (key is HashSet<T>)
+				{
 					set = (key as HashSet<T>);
+				}
 				else
+				{
 					set = new HashSet<T>();
+				}
+			}
 			set.Add(mapTo);
 
 			base[key] = set;

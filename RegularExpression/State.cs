@@ -1,13 +1,14 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace RegularExpression
 {
-    public class State
+	public class State
     {
         // the one and only Id tracker
         protected static int stateId = 0;
+
         public static void ResetId()
         {
             stateId = 0;
@@ -15,62 +16,83 @@ namespace RegularExpression
 
         // HashSet of transition objects
         protected Map<string,State> states = new Map<string,State>();
+
         public readonly int Id = stateId++;
-        public bool AcceptingState { get; set; } = false;
-        public bool IsDeadState()
-        {
-            if (this.AcceptingState)
-            {
-                return false;
-            }
-            if (this.states.Count == 0)
-            {
-                return false;
-            }
-            foreach (HashSet<State> setToState in this.states.Values)
-            {
-                foreach (State state in setToState)  // in a DFA, it should only iterate once
-                {
-                    if (state.Equals(this) == false)
-                    {
-                        return false;
-                    }
-                }
-            }
 
-            return true;
-        }
-        public State()
-        {
-        }
+        public virtual bool AcceptingState { get; set; } = false;
+
+		public virtual IEnumerable<string> AllKeys => this.states.Keys;
+
+		public virtual bool IsDeadState
+		{
+			get
+			{
+				if (this.AcceptingState)
+				{
+					return false;
+				}
+				if (this.states.Count == 0)
+				{
+					return false;
+				}
+				foreach (HashSet<State> setToState in this.states.Values)
+				{
+					foreach (State state in setToState)  // in a DFA, it should only iterate once
+					{
+						if (!state.Equals(this))
+						{
+							return false;
+						}
+					}
+				}
+
+				return true;
+			}
+		}
+
+		public State() { }
         
-        public void AddTransition(string sInputSymbol, State stateTo)
+        public virtual void AddTransition(string sInputSymbol, State stateTo)
         {
-            this.states.Add(sInputSymbol, stateTo);
+			if (sInputSymbol == null) throw new ArgumentNullException(nameof(sInputSymbol));
+
+			this.states.Add(sInputSymbol, stateTo);
         }
 
-        public HashSet<State> GetTransitions(string sInputSymbol)
+        public virtual HashSet<State> GetTransitions(string sInputSymbol)
         {
-            return this.states.TryGetValue(sInputSymbol, out var value)
+			if (sInputSymbol == null) throw new ArgumentNullException(nameof(sInputSymbol));
+
+			return this.states.TryGetValue(sInputSymbol, out var value)
                 ? value : new HashSet<State>();
         }
 
-        public State GetSingleTransition(string sInputSymbol)
+        public virtual State GetSingleTransition(string sInputSymbol)
         {
-            return this.states.TryGetValue(sInputSymbol, out var value)
-                ? value.ToArray()?[0] : null;
-        }
-        public void RemoveTransition(string sInputSymbol)
-        {
-            this.states.Remove(sInputSymbol);
+			if (sInputSymbol == null) throw new ArgumentNullException(nameof(sInputSymbol));
+
+			return this.states.TryGetValue(sInputSymbol, out var value)
+                ? value.FirstOrDefault() : null;
         }
 
-        public int ReplaceTransitionState(State stateOld, State stateNew)
+        public virtual void RemoveTransition(string sInputSymbol)
         {
-            int nReplacementCount = 0;
+			if (sInputSymbol == null) throw new ArgumentNullException(nameof(sInputSymbol));
+
+			this.states.Remove(sInputSymbol);
+        }
+
+        public virtual int ReplaceTransitionState(State stateOld, State stateNew)
+        {
+			if (stateOld == null) throw new ArgumentNullException(nameof(stateOld));
+
+			if (stateNew == null) throw new ArgumentNullException(nameof(stateNew));
+
+			int nReplacementCount = 0;
+
             foreach (HashSet<State> HashSetTrans in states.Values)
             {
-                if (HashSetTrans.Contains(stateOld) == true)
+                if (HashSetTrans.Contains(stateOld))
                 {
                     HashSetTrans.Remove(stateOld);
                     HashSetTrans.Add(stateNew);
@@ -79,18 +101,10 @@ namespace RegularExpression
             }
             return nReplacementCount;
         }
-        public ICollection GetAllKeys()
+
+		public override string ToString()
         {
-            return this.states.Keys;
-        }
-        public override string ToString()
-        {
-            string s = "s" + this.Id.ToString();
-            if (this.AcceptingState)
-            {
-                s = "{" + s + "}";
-            }
-            return s;
+            return this.AcceptingState ? "{s"+this.Id+"}" : "s"+this.Id;
         }
     }
 }
