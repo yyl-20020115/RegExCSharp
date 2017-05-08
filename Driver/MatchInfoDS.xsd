@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="MatchInfoDS" targetNamespace="http://tempuri.org/MatchInfoDS.xsd" xmlns:mstns="http://tempuri.org/MatchInfoDS.xsd" xmlns="http://tempuri.org/MatchInfoDS.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections>
+        </Connections>
+        <Tables>
+        </Tables>
+        <Sources>
+        </Sources>
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="MatchInfoDS" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_UserDSName="MatchInfoDS" msprop:Generator_DataSetName="MatchInfoDS">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="MatchInfo" msprop:Generator_UserTableName="MatchInfo" msprop:Generator_RowDeletedName="MatchInfoRowDeleted" msprop:Generator_TableClassName="MatchInfoDataTable" msprop:Generator_RowChangedName="MatchInfoRowChanged" msprop:Generator_RowClassName="MatchInfoRow" msprop:Generator_RowChangingName="MatchInfoRowChanging" msprop:Generator_RowEvArgName="MatchInfoRowChangeEvent" msprop:Generator_RowEvHandlerName="MatchInfoRowChangeEventHandler" msprop:Generator_TablePropName="MatchInfo" msprop:Generator_TableVarName="tableMatchInfo" msprop:Generator_RowDeletingName="MatchInfoRowDeleting">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="MatchString" msprop:Generator_UserColumnName="MatchString" msprop:Generator_ColumnPropNameInRow="MatchString" msprop:Generator_ColumnVarNameInTable="columnMatchString" msprop:Generator_ColumnPropNameInTable="MatchStringColumn" type="xs:string" minOccurs="0" />
+              <xs:element name="StartIndex" msprop:Generator_UserColumnName="StartIndex" msprop:Generator_ColumnPropNameInRow="StartIndex" msprop:Generator_ColumnVarNameInTable="columnStartIndex" msprop:Generator_ColumnPropNameInTable="StartIndexColumn" type="xs:int" minOccurs="0" />
+              <xs:element name="EndIndex" msprop:Generator_UserColumnName="EndIndex" msprop:Generator_ColumnPropNameInRow="EndIndex" msprop:Generator_ColumnVarNameInTable="columnEndIndex" msprop:Generator_ColumnPropNameInTable="EndIndexColumn" type="xs:int" minOccurs="0" />
+              <xs:element name="Length" msprop:Generator_UserColumnName="Length" msprop:Generator_ColumnPropNameInRow="Length" msprop:Generator_ColumnVarNameInTable="columnLength" msprop:Generator_ColumnPropNameInTable="LengthColumn" type="xs:int" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
